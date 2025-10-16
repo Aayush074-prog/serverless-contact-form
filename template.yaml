@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  A serverless backend for processing contact form submissions.
+
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+  # 1. The DynamoDB Table to store submissions
+  ContactFormSubmissionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: contact-form-submissions
+      AttributeDefinitions:
+        - AttributeName: submissionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: submissionId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  # 2. The Lambda Function that processes the form data
+  ContactFormFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: contact_form_processor/
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          SENDER_EMAIL: "aayushdcr7gk@gmail.com"
+          RECIPIENT_EMAIL: "aayushdcr7gk@gmail.com"
+          DYNAMODB_TABLE_NAME: !Ref ContactFormSubmissionsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ContactFormSubmissionsTable
+        - SESCrudPolicy:
+            IdentityName: "aayushdcr7gk@gmail.com"
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /submit
+            Method: post
+
+Outputs:
+  ContactFormApiEndpoint:
+    Description: "API Gateway endpoint URL for your contact form"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/submit"
