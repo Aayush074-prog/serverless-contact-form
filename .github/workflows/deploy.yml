@@ -39,7 +39,7 @@ jobs:
       # Step 6: Deploy the application to AWS
       - name: Deploy SAM application
         run: >
-          sam deploy --no-samconfig --no-confirm-changeset --no-fail-on-empty-changeset
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
           --stack-name serverless-contact-form-stack
           --s3-bucket ${{ secrets.S3_DEPLOY_BUCKET }}
           --capabilities CAPABILITY_IAM
