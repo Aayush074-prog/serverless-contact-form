@@ -1,0 +1,45 @@
+name: Deploy Serverless Backend to AWS
+
+# Trigger this workflow on every push to the main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Check out the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up the Python environment
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.13' # Match your project's Python version
+
+      # Step 3: Set up the AWS SAM CLI
+      - name: Setup AWS SAM CLI
+        uses: aws-actions/setup-sam@v2
+
+      # Step 4: Configure AWS credentials using the GitHub secrets
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1 # IMPORTANT: Change this if you used a different region
+
+      # Step 5: Build the SAM application
+      - name: Build SAM application
+        run: sam build --use-container
+
+      # Step 6: Deploy the application to AWS
+      - name: Deploy SAM application
+        run: >
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+          --stack-name serverless-contact-form-stack
+          --s3-bucket ${{ secrets.S3_DEPLOY_BUCKET }}
+          --capabilities CAPABILITY_IAM
